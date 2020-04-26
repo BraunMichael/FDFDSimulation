@@ -1,4 +1,4 @@
-function [E, H, obj_array, src_array] = nanowire_3d_func(substrate_t, NWlength, NWdiameter, NWspacing_x, NWspacing_z, Laser_angle, Laser_pol, max_NWlength, roughness_rate, grid_size, max_wire_xz_gridsize, max_wire_y_gridsize, max_tip_gridsize, PML_cells, z_location, opts, min_tip_src_dist, src_top_dist, Dim_3D, solveropts, wire_shape, UniformNWCells, TFSF, inspect_only, show_solution, save_solution, filenamebase, num_NWs, NW_tip, top_source_testing, substrate_exist, max_x_gridsize, max_y_gridsize, max_z_gridsize, overall_gridsize_limit, NW2_Diameter_Delta, NW2_xpos_Delta, NW2_zpos_Delta)
+function [E, H, obj_array, src_array] = nanowire_3d_func_V2(substrate_t, NWlength, NWdiameter, NWspacing_x, NWspacing_z, Laser_angle, Laser_pol, max_NWlength, roughness_rate, grid_size, max_wire_xz_gridsize, max_wire_y_gridsize, max_tip_gridsize, PML_cells, z_location, opts, min_tip_src_dist, src_top_dist, Dim_3D, solveropts, wire_shape, UniformNWCells, TFSF, inspect_only, show_solution, save_solution, filenamebase, NW_tip, top_source_testing, substrate_exist, max_x_gridsize, max_y_gridsize, max_z_gridsize, overall_gridsize_limit, superCellnum_x, superCellnum_z, NW_Diameter_Delta, NW_xpos_Delta, NW_zpos_Delta, NW_exist)
 
 
 %% In case of hexagonal wire
@@ -15,8 +15,9 @@ wavelength = 633;  % wavelength
 Theta = Laser_angle*pi/180;
 Phi = Laser_pol*pi/180;
 
-width = NWspacing_x * num_NWs;
-depth = NWspacing_z * num_NWs;
+
+width = NWspacing_x * superCellnum_x;
+depth = NWspacing_z * superCellnum_z;
 if top_source_testing
     %height = 3000;
     %height = 1790; %20PML, 200 substrate
@@ -31,11 +32,13 @@ else
 end
 
 solveropts.filenamebase = filenamebase;
+disp(solveropts.filenamebase)
 
 
 %% Materials and Colors
 gray = [0.5 0.5 0.5];  % [r g b]
 gold = [1 215/255 0];
+blue = [200/255 200/255 1];
 if UniformNWCells || max_wire_xz_gridsize>=grid_size
     NW_CellAspectRatio = 1;
 else
@@ -45,19 +48,20 @@ end
 
 
 Substrate = Box([-width/2, width/2; 0, substrate_t; -depth/2, depth/2]);
-switch num_NWs
-    case 1
-        if NWlength == 0
-            Ge = [Substrate];
-        else
+Ge = Substrate;
+
+for i = 1:superCellnum_x
+    for j = 1:superCellnum_z
+        cellCenter_x = (i*(width/superCellnum_x)) - 0.5*width - 0.5*NWspacing_x;
+        cellCenter_z = (j*(depth/superCellnum_z)) - 0.5*depth - 0.5*NWspacing_z;
+        if NW_exist && NWlength ~= 0
             if strcmp(wire_shape, 'hexagonal')
-                Nanowire = PolygonalCylinder(Axis.y, NWlength, substrate_t+0.5*NWlength, vertexarray, max_wire_xz_gridsize);
+                Nanowire = PolygonalCylinder(Axis.y, NWlength, substrate_t+0.5*NWlength, vertexarray, max_wire_xz_gridsize); %Needs work if want to have adjustable supercell with hexagonal
             else
-                Nanowire = CircularCylinder(Axis.y, NWlength, [0 substrate_t+0.5*NWlength 0], NWdiameter/2, max_wire_xz_gridsize.*[1 NW_CellAspectRatio 1]);
+                Nanowire = CircularCylinder(Axis.y, NWlength, [cellCenter_x+NW_xpos_Delta(j,i) substrate_t+0.5*NWlength cellCenter_z+NW_zpos_Delta(j,i)], (NWdiameter+NW_Diameter_Delta(j,i))/2, max_wire_xz_gridsize.*[1 NW_CellAspectRatio 1]);
             end
-            if roughness_rate == 0
-                Ge = [Nanowire, Substrate];
-            else
+            Ge = [Ge, Nanowire];
+            if roughness_rate ~= 0 %This is super broken, need to add cellCenter and all kinds of things
                 roughness_size = NWlength*roughness_rate;
                 %Need to decide on constant number (ie just grow in size, need maxNW_length*roughness_rate below then), or if they "eat"
                 %eachother (currently, using roughness_size)
@@ -75,23 +79,15 @@ switch num_NWs
                         end
                     end
                 end
-                Ge = [Nanowire, Roughness, Substrate];
+                Ge = [Ge, Roughness];
             end
         end
-        Nanowire_Tip = Hemisphere([0 substrate_t+NWlength 0], (NWdiameter/2).*[1 1 1], Axis.y, max_tip_gridsize);
-    case 2
-        if NWlength == 0
-            Ge = [Substrate];
+        if i == 1 && j == 1
+            Nanowire_Tip = Hemisphere([cellCenter_x+NW_xpos_Delta(j,i) substrate_t+NWlength cellCenter_z+NW_zpos_Delta(j,i)], (NWdiameter+NW_Diameter_Delta(j,i))/2.*[1 1 1], Axis.y, max_tip_gridsize);
         else
-            NW2_xpos_Delta, NW2_zpos_Delta
-            if (NW2_xpos_Delta + (NWdiameter/2)) > NWspacing_x/2
-            Nanowire1 = CircularCylinder(Axis.y, NWlength, [-NWspacing_x/2 substrate_t+0.5*NWlength 0], NWdiameter/2, max_wire_xz_gridsize.*[1 NW_CellAspectRatio 1]);
-            Nanowire2 = CircularCylinder(Axis.y, NWlength, [NWspacing_x/2+NW2_xpos_Delta substrate_t+0.5*NWlength 0], (NWdiameter+NW2_Diameter_Delta)/2, max_wire_xz_gridsize.*[1 NW_CellAspectRatio 1]);
-            Ge = [Nanowire1, Nanowire2, Substrate];
+            Nanowire_Tip = [Nanowire_Tip, Hemisphere([cellCenter_x+NW_xpos_Delta(j,i) substrate_t+NWlength cellCenter_z+NW_zpos_Delta(j,i)], (NWdiameter+NW_Diameter_Delta(j,i))/2.*[1 1 1], Axis.y, max_tip_gridsize)];
         end
-        Nanowire_Tip1 = Hemisphere([-NWspacing_x/2 substrate_t+NWlength 0], (NWdiameter/2).*[1 1 1], Axis.y, max_tip_gridsize);
-        Nanowire_Tip2 = Hemisphere([NWspacing_x/2 substrate_t+NWlength 0], ((NWdiameter+NW2_Diameter_Delta)/2).*[1 1 1], Axis.y, max_tip_gridsize);
-        Nanowire_Tip = [Nanowire_Tip1, Nanowire_Tip2];
+    end
 end
 
 if Dim_3D
@@ -108,6 +104,8 @@ if TFSF
 else
     obj_string = 'OBJ';
     source_string = 'SRCJ';
+    %source = PlaneSrc(Axis.y, source_height, Axis.x, 10, pi/2-Theta, wavelength);
+    %source = PlaneSrc(Axis.x, -100, Axis.y, 10, Theta, wavelength);
     %source = PlaneSrc(Axis.y, source_height, Axis.z, 10, pi/2-Theta, wavelength);
     source = PlaneSrc(Axis.y, source_height, Phi, 10, pi/2-Theta, wavelength);
 end
@@ -147,6 +145,7 @@ elseif ~NW_tip && substrate_exist
             'DOM', {'vacuum', 'none', 1.0}, domain_size, domain_grid_size, [BC.p BC.e BC.p], [0 PML_cells*grid_size 0],...
             obj_string, ...
             {'Palik/Ge', gray}, Ge, ...
+            {'vacuum', blue, 1.0}, Nanowire_Tip, ... % Didn't use to have this line, now have vacuum stand in material
             source_string, source, solveropts, inspect_only);
         E = 0;
         H = 0;
