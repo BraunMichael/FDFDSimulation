@@ -76,7 +76,7 @@ for k = 1 : length(theFiles)
     L=[domainsize * 1e-6, domainsize * 1e-6, abs(height - min_y) * 1e-9]; %in meters
     N_gauss = round((L .* 1e9)./ grid_spacing) + 1;
     %% Calculate init
-    init = retop(@FieldInterpolation_onbox_v3,k0,n_strates,z_strates,Centre,L,N_gauss,struct('option_cal_champ',option_cal_champ,'option_i',option_i));
+    init = retop(@FieldInterpolation_onbox,k0,n_strates,z_strates,Centre,L,N_gauss,struct('option_cal_champ',option_cal_champ,'option_i',option_i));
     return
     %% Compute the plane wave decomposition in free space
     if limited_range
