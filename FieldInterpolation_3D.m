@@ -5,7 +5,7 @@ slice_axis = Axis.z;
 slice_location = 0; %if slice_axis = Axis.y, this is nm above source (negative if you want to slice below source height
 even_interpolation = true;
 if even_interpolation
-    interpolation_gridsize = 10;
+    interpolation_gridsize = 2;
 end
 
 
