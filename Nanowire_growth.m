@@ -5,18 +5,21 @@ inspect_only = false;  % true to inspect structure before any calculation
 
 tasks = 16; %16 %8
 nodes = 2; %2 %1
-total_mem = 32; %[8 16 32 48]; %Total ram, in gigabytes, scaling with spacing, just read at same index
+total_mem = [16 32]; %[8 16 32 48]; %Total ram, in gigabytes, scaling with spacing, just read at same index
 
 
 %endstring = '_100nmtop_4nmbackground';
 %endstring = '_100nmtop_fixedNWsize_5nm_subres4';
 %endstring = '_200nmtop_200nmsub_fixedNWsize_5nm_subres4_2NWs';
-endstring = '_200nmtop_200nmsub_fixedNWsize_5nm_subres4'; %_background added with createBackgroundFile
-%endstring = '_200nmtop_200nmsub'; %_background added with createBackgroundFile
+%endstring = '_200nmtop_200nmsub_fixNW_noTip'; %_background added with createBackgroundFile
+endstring = '_200nmtop_200nmsub'; %_background added with createBackgroundFile
 
 
-timestring = {'6:00:00'}; %{'1:00:00'; '2:00:00'; '4:00:00'; '12:00:00'};
+timestring = {'2:00:00'; '10:00:00'}; %{'1:00:00'; '2:00:00'; '4:00:00'; '12:00:00'};
 createBackgroundFile = false;
+NW_exist = true;
+NW_tip = true; %Simulate with gold NW catalyst?
+
 
 cluster = 'Sherlock'; %Options 'Rice' or 'Sherlock'
 top_source_testing = false;
@@ -36,14 +39,14 @@ max_wire_xz_gridsize = 4; %mostly 2, Utilizes non-uniform grid, minimum grid siz
 max_wire_y_gridsize = 5; %mostly 5, 2 or 10
 max_tip_gridsize = 4; %mostly 2 %Utilizes non-uniform grid, minimum grid size in nm, inf uses grid_size
 
-superCellnum_x = 1; % number of cells in x direction
+superCellnum_x = 2; % number of cells in x direction
 superCellnum_z = 1; % number of cells in z direction
 
-NW_Diameter_Delta = 0; %[0 40;20 0];  %must be array of size superCellnum_x (wide) by superCellnum_z ('tall'), defines deviation from D set below for wire at given position in array
-NW_xpos_Delta = 0; %[0 30;-120 90];  %must be array of size superCellnum_x (wide) by superCellnum_z ('tall'), defines deviation from center of subcell in x direction at given position in array
-NW_zpos_Delta = 0; %[0 60;-50 140]; %must be array of size superCellnum_x (wide) by superCellnum_z ('tall'), defines deviation from center of subcell in z direction at given position in array
-NWspacing_x = 800; %[300 400 600 1000]; %This is delta=0 spacing, regardless of number of wires in supercell
-NWspacing_z = 800; %These can be an array, like how S used to be, but both must match (doesn't do all possible combinations), keeps it square if an array
+NW_Diameter_Delta = [0 0]; %[0 40;20 0];  %must be array of size superCellnum_x (wide) by superCellnum_z ('tall'), defines deviation from D set below for wire at given position in array
+NW_xpos_Delta = [0 0]; %[0 30;-120 90];  %must be array of size superCellnum_x (wide) by superCellnum_z ('tall'), defines deviation from center of subcell in x direction at given position in array
+NW_zpos_Delta = [0 0]; %[0 60;-50 140]; %must be array of size superCellnum_x (wide) by superCellnum_z ('tall'), defines deviation from center of subcell in z direction at given position in array
+NWspacing_x = [400 800]; %[300 400 600 1000]; %This is delta=0 spacing, regardless of number of wires in supercell
+NWspacing_z = [400 800]; %These can be an array, like how S used to be, but both must match (doesn't do all possible combinations), keeps it square if an array
 
 max_NWlength = 2000; %2000
 
@@ -55,28 +58,29 @@ if createBackgroundFile
     D = 40;
     endstring = strcat(endstring, '_background');
 else
-    NW_tip = true; %Simulate with gold NW catalyst?
     substrate_exist = true;
     overall_gridsize_limit = false;
     %num_lengths = 99;
     %L = [0 linspace(20, 1000, num_lengths)];
     %L = 1000;
     
-    %num_lengths = 199;
-    %L = [0 linspace(20, 2000, num_lengths)];
+    %     num_lengths = 199;
+    %     L = [0 linspace(20, 2000, num_lengths)];
     
     
+    %num_lengths = 197;
+    %L = [0 linspace(40, 2000, num_lengths)];
     %num_lengths = 97;
     %L = [0 linspace(40, 1000, num_lengths)];
     
     
-    %num_lengths = 100; %20 nm steps, run again with below values to improve to 10 nm resolution if submitting in 2 batches
-    %L = [0 linspace(20, 2000, num_lengths)];
+    num_lengths = 100; %20 nm steps, run again with below values to improve to 10 nm resolution if submitting in 2 batches
+    L = [0 linspace(20, 2000, num_lengths)];
     
-    num_lengths = 99; %Complement of above to mesh toghether for 10 nm resolution
-    L = linspace(30, 1990, num_lengths);
+    %num_lengths = 99; %Complement of above to mesh toghether for 10 nm resolution
+    %L = linspace(30, 1990, num_lengths);
     
-        
+    
     %num_lengths = 51; %20 nm steps, run again with below values to improve to 10 nm resolution if submitting in 2 batches
     %L = linspace(0, 1000, num_lengths);
     
@@ -85,8 +89,8 @@ else
     
     %num_diameters = 31;
     %D = linspace(40, 100, num_diameters);
-    D = [60 80];
-    %D = 40;
+    D = [40 80];
+    %D = 80;
 end
 
 %only used if createBackgroundFile is true
@@ -172,7 +176,7 @@ if superCellnum_x > 1 || superCellnum_z > 1
     end
 end
 
-superCellString = sprintf('_%.0fx%.0f', superCellnum_x, superCellnum_x);
+superCellString = sprintf('_%.0fx%.0f', superCellnum_x, superCellnum_z);
 
 if strcmp(cluster, 'Rice')
     if nodes ~= 1
@@ -233,6 +237,7 @@ for i=1:max(size(NWspacing_x))
             else
                 folderstring = sprintf('2D_%sd_%.0f_x_%.0f_z_%.0f_maxL_%.0f_res_%.0f%s%s', typestring, D(j), NWspacing_x(i), NWspacing_z(i), max_NWlength, grid_size, superCellString, endstring);
             end
+            cd(folderpath)
             fullfolderstring = strcat(pwd,'\',folderstring);
             if 7~=exist(fullfolderstring,'dir')
                 mkdir(fullfolderstring)
@@ -275,8 +280,15 @@ for i=1:max(size(NWspacing_x))
                     fclose(fid);true;
                     
                     for q=1:max(size(src_top_dist))
+                        cd (fullfolderstring)
+                        parfor k=1:max(size(L))
+                            runningfilenamebase = sprintf('GeNW_%sL_%0.0f_d_%0.0f_x_%0.0f_z_%0.0f_subt_%0.0f_res_%0.0f_inc_%0.0fdeg_pol_%0.0fdeg%s%s', typestring, L(k), D(j), NWspacing_x(i), NWspacing_z(i), substrate_thickness(p), grid_size, Laser_angle(m), Laser_pol(n), superCellString, endstring);
+                            [E, H, obj_array, src_array] = nanowire_3d_func_V2(substrate_thickness(p), L(k), D(j), NWspacing_x(i), NWspacing_z(i), Laser_angle(m), Laser_pol(n), max_NWlength, roughness_rate, grid_size, max_wire_xz_gridsize, max_wire_y_gridsize, max_tip_gridsize, PML_cells, z_location, opts, min_tip_src_dist, src_top_dist(q), Dim_3D, solveropts, wire_shape, UniformNWCells, TFSF, inspect_only, show_solution, save_solution, runningfilenamebase, NW_tip, top_source_testing, substrate_exist, max_x_gridsize, max_y_gridsize, max_z_gridsize, overall_gridsize_limit, superCellnum_x, superCellnum_z, NW_Diameter_Delta, NW_xpos_Delta, NW_zpos_Delta, NW_exist);
+                            appendInfoMatFile(runningfilenamebase, superCellnum_x, superCellnum_z, NW_Diameter_Delta, NW_xpos_Delta, NW_zpos_Delta)
+                            %drawnow
+                        end
+                        cd(fullrunfilesstring)
                         for k=1:max(size(L))
-                            cd(fullrunfilesstring)
                             filenamebase = sprintf('GeNW_%sL_%.0f_d_%0.0f_x_%0.0f_z_%0.0f_res_%0.0f%s%s.sh', typestring, L(k), D(j), NWspacing_x(i), NWspacing_z(i), grid_size, superCellString, endstring);
                             jobname = sprintf('3D_%sL_%.0f_d_%0.0f_x_%0.0f_z_%0.0f_res_%0.0f%s%s', typestring, L(k), D(j), NWspacing_x(i), NWspacing_z(i), grid_size, superCellString, endstring);
                             runningfilenamebase = sprintf('GeNW_%sL_%0.0f_d_%0.0f_x_%0.0f_z_%0.0f_subt_%0.0f_res_%0.0f_inc_%0.0fdeg_pol_%0.0fdeg%s%s', typestring, L(k), D(j), NWspacing_x(i), NWspacing_z(i), substrate_thickness(p), grid_size, Laser_angle(m), Laser_pol(n), superCellString, endstring);
@@ -317,12 +329,7 @@ for i=1:max(size(NWspacing_x))
                             fid = fopen(masterfilename,'a+');
                             fprintf(fid, ['sbatch ' filenamebase '\nsleep 1s\n']);
                             fclose(fid);true;
-                            cd ..
-                            
-                            
-                            [E, H, obj_array, src_array] = nanowire_3d_func_V2(substrate_thickness(p), L(k), D(j), NWspacing_x(i), NWspacing_z(i), Laser_angle(m), Laser_pol(n), max_NWlength, roughness_rate, grid_size, max_wire_xz_gridsize, max_wire_y_gridsize, max_tip_gridsize, PML_cells, z_location, opts, min_tip_src_dist, src_top_dist(q), Dim_3D, solveropts, wire_shape, UniformNWCells, TFSF, inspect_only, show_solution, save_solution, runningfilenamebase, NW_tip, top_source_testing, substrate_exist, max_x_gridsize, max_y_gridsize, max_z_gridsize, overall_gridsize_limit, superCellnum_x, superCellnum_z, NW_Diameter_Delta, NW_xpos_Delta, NW_zpos_Delta);
-                            %drawnow
-                            appendInfoMatFile(runningfilenamebase, superCellnum_x, superCellnum_z, NW_Diameter_Delta, NW_xpos_Delta, NW_zpos_Delta)
+
                         end
                     end
                 end
