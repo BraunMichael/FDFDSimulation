@@ -1,0 +1,51 @@
+cd $HOME
+mkdir petsc
+mkdir fd3d
+cd petsc
+#May need to update link to whatever latest or working petsc version is: https://www.mcs.anl.gov/petsc/download/index.html
+wget http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.6.4.tar.gz
+tar -xvzf petsc-3.6.4.tar.gz
+cd $HOME
+vim .bash_profile
+# add the lines, using whatever petsc version downloaded (without the #):
+# export PETSC_DIR=$HOME/petsc/petsc-3.6.4
+# export PETSC_ARCH=petscfd3d
+#Make sure to save and exit
+
+source $HOME/.bash_profile
+cd $HOME/fd3d
+wget https://github.com/wsshin/fd3d/archive/master.zip
+unzip master.zip
+cd fd3d-master
+cp petscfd3d.py $PETSC_DIR/config
+cd $PETSC_DIR/config
+chmod u+x petscfd3d.py
+vim petscfd3d.py
+# add the following in the list of flags (without the #):
+# '--download-f2cblaslapack',
+cd $PETSC_DIR
+config/petscfd3d.py
+make all
+make test
+
+#Now onto installing fd3d
+cd $HOME
+vim .fd3d
+#add the following lines (without the #), the exact line depends where the fd3d was extracted, need it such that $FD3D_ROOT/src exists:
+#export FD3D_ROOT=$HOME/fd3d/fd3d-master
+vim .bash_profile
+#the last line is just PATH, before it add (without the #):
+#source $HOME/.fd3d
+#Then change the PATH line to the following (without the #):
+#export PATH=$PATH:$FD3D_ROOT/bin
+
+source $HOME/.bash_profile
+cd $FD3D_ROOT/src
+#If this does not place you in $FD3D_ROOT/src/ directory, it means above steps are not done correctly.
+cp makefiles/makefile.tmp makefile
+make
+
+#test to make sure everything is good, needs to run without error messages
+cd $FD3D_ROOT/test
+gzip -d pointsrc_2d.{eps,srcJ,srcM}.gz
+fd3d -i pointsrc_2d
