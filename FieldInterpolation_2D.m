@@ -1,6 +1,9 @@
+% Only takes a slice above the source and below the pml
+
 close all;
 clear all;
 clc;
+
 %Select folder containing all the files
 folderpath=uigetdir();
 %Set this folder as current directory
@@ -21,15 +24,6 @@ for k = 1 : length(theFiles)
     baseFileName = theFiles(k).name;
     Simfilename = fullfile(folderpath, baseFileName);
     [~, Simfilename_only, ~]=fileparts(Simfilename);
-    
-    % %% Import data from text file.
-    % addpath(genpath('E:\Michael\Stanford\Research\Data\Simulation'))
-    % cd 'E:\Michael\Stanford\Research\Data\Simulation'
-    % %addpath(genpath('C:\Spectre Working Folder\Reflectometry'))
-    % %cd 'C:\Spectre Working Folder\Reflectometry'
-    % [Simfilename, folderpath] = uigetfile('*.mat');
-    % cd(folderpath)
-    %[~, Simfilename_only, ~]=fileparts(Simfilename);
     load(Simfilename)
     fprintf('Working on %s\n', Simfilename_only);
     Fields = {E, H};
@@ -48,6 +42,9 @@ for k = 1 : length(theFiles)
             
             interpx = sort(horzcat(primx,dualx));
             interpy = sort(horzcat(primy,dualy));
+            %Only calculate slice at 1/2 way between source and top of
+            %simulation
+            interpy = 0.5 * (max(interpy) + src_array.intercept);
             %interpz = sort(horzcat(primz,dualz));
             %Only calculate at z=0
             interpz = 0;
@@ -76,9 +73,7 @@ for k = 1 : length(theFiles)
             %Use permute to switch from Maxwell_FDFD to Matlab standard of Y,X,Z array
             %indices
             field_values = permute(field{1}{component}.array, [2 1 3]);
-            
-            interpfield_values = griddata(X, Y, Z, field_values, Xq, Yq, Zq, 'natural');
-            Compiled_fields{i}{component} = interpfield_values;
+            Compiled_fields{i}{component} = griddata(X, Y, Z, field_values, Xq, Yq, Zq, 'linear');
         end
         i = i + 1;
     end
@@ -100,7 +95,7 @@ for k = 1 : length(theFiles)
         end
     end
     
-    save(Simfilename, 'E', 'H', 'obj_array', 'src_array', 'J', 'E_compiled', 'H_compiled', 'E2', 'H2', 'S', 'S_mag', 'Xq', 'Yq', 'Zq')
+    save(Simfilename, 'E', 'H', 'obj_array', 'src_array', 'J', 'E_compiled', 'H_compiled', 'E2', 'H2', 'S', 'S_mag')
 end
 
-fprintf('Done')
+fprintf('Done\n')
