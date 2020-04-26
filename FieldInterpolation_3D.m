@@ -11,7 +11,7 @@ end
 
 save_results = false;
 show_figures = true;
-numberrepeats = 2;
+numberrepeats = 1;
 ygrid = true; %only applies if slice_axis == Axis.y
 
 k_x = pi/633; %Shouldn't need to change this, horizontal wave vector of incident light
@@ -39,9 +39,8 @@ for k = 1 : length(theFiles)
     load(filenamebase)
     [E, H] = read_output(filenamebase);
     Fields = {E, H};
-    return
-    NWlength = obj_array(2).shape.L(2);
-    diameter = obj_array(2).shape.L(1);
+    %NWlength = obj_array(2).shape.L(2);
+    %diameter = obj_array(2).shape.L(1);
     i=1;
     Compiled_fields = cell(2,1);
     Compiled_fields{1} = cell(3,1);
@@ -99,7 +98,7 @@ for k = 1 : length(theFiles)
             k_u = k_x;
             field_values_temp(1,:,:) = field_values_temp(end,:,:);
             field_values_temp(end,:,:) = field_values_temp(1,:,:).*exp(-1i*k_u*domainwidth);
-            return
+            
             
             
             %field_values_temp = field_values_temp(1:end-1,:,:);
@@ -319,6 +318,7 @@ if show_figures
     maxvalue = max(max(abs(real(E_comp))));
     
     figure
+    hold on
     axhand = gca;
     %fighand = pcolor(outx, outy, E2);
     fighand = pcolor(outu2, outv2, real(E_comp));
@@ -330,5 +330,31 @@ if show_figures
     colormap(axhand, b2r(4096))
     colorbar
     caxis([-maxvalue maxvalue])
-    drawnow
+    hold off
+%     
+%     figure
+%     axis([min(min(outu2)) max(max(outu2)) min(min(outv2)) max(max(outv2))])
+%     line([min(min(outu2)),max(max(outu2))], [src_array.intercept, src_array.intercept], 'Color', 'green')
+%     line([min(min(outu2)),max(max(outu2))], [obj_array(3).shape.L(2), obj_array(3).shape.L(2)], 'Color', 'black')
+%     for n=1:numberrepeats
+%         try
+%             pos = [(obj_array(2).shape.bound(1,1)+ ((n-1)*domainwidth)) obj_array(2).shape.bound(2,1) obj_array(2).shape.bound(1,2)-obj_array(2).shape.bound(1,1) obj_array(2).shape.bound(2,2)-obj_array(2).shape.bound(2,1)]; %four-element vector of the form [x y w h]
+%             rectangle('Position', pos)
+%         catch
+%         end
+%         try
+%             thet = linspace(0,pi);
+%             x = (obj_array(4).shape.cb_center(1) + ((n-1)*domainwidth)) + 0.5*obj_array(4).shape.L(1)*cos(thet);
+%             y = obj_array(4).shape.bound(2,1) + obj_array(4).shape.L(2)*sin(thet);
+%             plot(x,y,'Color',[1 215/255 0])
+%         catch
+%         end
+%         hold off
+%         drawnow
+%     end
+%     figpos = get(gca, 'Position'); %[xmin ymin width height]
+%     figratio = figpos(3)/figpos(4);
+%     set(gcf,'PaperSize',[10*figratio 10]); %[width height]
 end
+    %Export
+    %save('fieldvis.mat', 'outu2', 'outv2', 'E_comp', 'maxvalue', 'src_array', 'obj_array', 'domainwidth', 'numberrepeats')
