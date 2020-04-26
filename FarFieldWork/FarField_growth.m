@@ -1,7 +1,7 @@
 clear all; close all; clear classes; clear opts; clc;
 
 %% Simulation Setup Parameters
-
+pathToNtoFFV8 = '/home/user/NtoFField_packageV8';
 tasks = 32;
 nodes = 2;
 total_mem = 96; %[4 8 16 64]; %Total ram, in gigabytes, scaling with spacing, just read at same index
@@ -137,7 +137,7 @@ for i=1:max(size(S))
                         runningfilenamebase = sprintf('GeNW_%sL_%0.0f_d_%0.0f_x_%0.0f_z_%0.0f_subt_%0.0f_res_%0.0f_inc_%0.0fdeg_pol_%0.0fdeg%s', typestring, L(k), D(j), S(i), S(i), substrate_thickness(p), grid_size, Laser_angle(m), Laser_pol(n), endstring);
                         
                         preamble = sprintf('#! /bin/bash\n#\n#SBATCH --job-name=%s\n#\n#SBATCH --time=45:00\n#SBATCH --ntasks=%.0f\n#SBATCH --nodes=%.0f\n#SBATCH --mem-per-cpu=%.0fM\n#SBATCH --mail-type=ALL\n#SBATCH --output=log%%x \ncd $SCRATCH/%s/folder_%s\necho "SLURM_JOB_ID = $SLURM_JOB_ID"\nmodule load matlab\n', jobname, tasks, nodes, mem_percpu, folderstring, runningfilenamebase);
-                        runningfilename = sprintf('matlab -r "addpath(genpath(''/home/mbraun7/NtoFField_packageV8'')); N2FF_Transform_Growth; exit"');
+                        runningfilename = sprintf('matlab -r "addpath(genpath(''%s'')); N2FF_Transform; exit"', pathToNtoFFV8);
                         
                         fid=fopen(filenamebase,'w'); %Make it 'wt' if you want to see the line breaks in Windows, but messes with Linux
                         fprintf(fid, '%s%s', preamble, runningfilename);
