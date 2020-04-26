@@ -12,7 +12,7 @@ total_mem = 16; %[8 16 32 48]; %Total ram, in gigabytes, scaling with spacing, j
 %appendstring = '_100nmtop_fixedNWsize_5nm_subres4';
 %appendstring = '_200nmtop_200nmsub_fixedNWsize_5nm_subres4_2NWs';
 %appendstring = '_200nmtop_200nmsub_fixNW_noTip'; %_background added with createBackgroundFile
-appendstring = '_200nmtop_200nmsub'; %_background added with createBackgroundFile
+appendstring = 'pol_z_200nmtop_200nmsub'; %_background added with createBackgroundFile
 
 
 timestring = {'1:00:00'}; %{'1:00:00'; '2:00:00'; '4:00:00'; '12:00:00'};
@@ -39,59 +39,53 @@ max_wire_xz_gridsize = 4; %mostly 2, Utilizes non-uniform grid, minimum grid siz
 max_wire_y_gridsize = 5; %mostly 5, 2 or 10
 max_tip_gridsize = 4; %mostly 2 %Utilizes non-uniform grid, minimum grid size in nm, inf uses grid_size
 
-superCellnum_x = 1; % number of cells in x direction
+superCellnum_x = 2; % number of cells in x direction
 superCellnum_z = 1; % number of cells in z direction
 
-NW_Diameter_Delta = 0; %[0 40;20 0];  %must be array of size superCellnum_x (wide) by superCellnum_z ('tall'), defines deviation from D set below for wire at given position in array
-NW_xpos_Delta = 0; %[0 30;-120 90];  %must be array of size superCellnum_x (wide) by superCellnum_z ('tall'), defines deviation from center of subcell in x direction at given position in array
-NW_zpos_Delta = 0; %[0 60;-50 140]; %must be array of size superCellnum_x (wide) by superCellnum_z ('tall'), defines deviation from center of subcell in z direction at given position in array
-NWspacing_x = 400; %[300 400 600 1000]; %This is delta=0 spacing, regardless of number of wires in supercell
-NWspacing_z = 400; %These can be an array, like how S used to be, but both must match (doesn't do all possible combinations), keeps it square if an array
+NW_Diameter_Delta = [0 0]; %[0 40;20 0];  %must be array of size superCellnum_x (wide) by superCellnum_z ('tall'), defines deviation from D set below for wire at given position in array
+NW_xpos_Delta = [0 120]; %[0 30;-120 90];  %must be array of size superCellnum_x (wide) by superCellnum_z ('tall'), defines deviation from center of subcell in x direction at given position in array
+NW_zpos_Delta = [0 0]; %[0 60;-50 140]; %must be array of size superCellnum_x (wide) by superCellnum_z ('tall'), defines deviation from center of subcell in z direction at given position in array
+NWspacing_x = [300 400 600]; %[300 400 600 1000]; %This is delta=0 spacing, regardless of number of wires in supercell
+NWspacing_z = [300 400 600]; %These can be an array, like how S used to be, but both must match (doesn't do all possible combinations), keeps it square if an array
 
 max_NWlength = 2000; %2000
 
-if createBackgroundFile
-    NW_tip = false; %Simulate with gold NW catalyst?
-    substrate_exist = false;
-    overall_gridsize_limit = true; %if true, uses max_x/y/z gridsizes below on the domain, remember y is vertical (direction of wire growth)
-    L = 0;
-    D = 40;
-    appendstring = strcat(appendstring, '_background');
-else
-    substrate_exist = true;
-    overall_gridsize_limit = false;
-    %num_lengths = 99;
-    %L = [0 linspace(20, 1000, num_lengths)];
-    %L = 1000;
-    %L = [160 300 760 1480 1620 1760 1940]
-    num_lengths = 199;
-    L = [0 linspace(20, 2000, num_lengths)];
-    
-    
-    %num_lengths = 197;
-    %L = [0 linspace(40, 2000, num_lengths)];
-    %num_lengths = 97;
-    %L = [0 linspace(40, 1000, num_lengths)];
-    
-    
-    %num_lengths = 100; %20 nm steps, run again with below values to improve to 10 nm resolution if submitting in 2 batches
-    %L = [0 linspace(20, 2000, num_lengths)];
-    
-    %num_lengths = 99; %Complement of above to mesh toghether for 10 nm resolution
-    %L = linspace(30, 1990, num_lengths);
-    
-    
-    %num_lengths = 51; %20 nm steps, run again with below values to improve to 10 nm resolution if submitting in 2 batches
-    %L = linspace(0, 1000, num_lengths);
-    
-    %num_lengths = 48; %Complement of above to mesh toghether for 10 nm resolution
-    %L = linspace(30, 990, num_lengths);
-    
-    %num_diameters = 31;
-    %D = linspace(40, 100, num_diameters);
-    %D = [40 80];
-    D = 40;
-end
+%% Wire Parameters
+substrate_exist = true;
+overall_gridsize_limit = false;
+%num_lengths = 99;
+%L = [0 linspace(20, 1000, num_lengths)];
+%L = 1000;
+%L = [160 300 760 1480 1620 1760 1940]
+
+num_lengths = 199;
+L = [0 linspace(20, 2000, num_lengths)];
+
+
+%num_lengths = 197;
+%L = [0 linspace(40, 2000, num_lengths)];
+%num_lengths = 97;
+%L = [0 linspace(40, 1000, num_lengths)];
+
+
+%num_lengths = 100; %20 nm steps, run again with below values to improve to 10 nm resolution if submitting in 2 batches
+%L = [0 linspace(20, 2000, num_lengths)];
+
+%num_lengths = 99; %Complement of above to mesh toghether for 10 nm resolution
+%L = linspace(30, 1990, num_lengths);
+
+
+%num_lengths = 51; %20 nm steps, run again with below values to improve to 10 nm resolution if submitting in 2 batches
+%L = linspace(0, 1000, num_lengths);
+
+%num_lengths = 48; %Complement of above to mesh toghether for 10 nm resolution
+%L = linspace(30, 990, num_lengths);
+
+%num_diameters = 31;
+%D = linspace(40, 100, num_diameters);
+D = [40 60 80];
+%D = 80;
+
 
 %only used if createBackgroundFile is true
 max_x_gridsize = 4;
@@ -199,10 +193,13 @@ addpath(genpath(folderpath))
 cd(folderpath)
 for bb=1:2
     if bb == 2
-        
+        NW_tip = false; %Simulate with gold NW catalyst?
+        substrate_exist = false;
+        overall_gridsize_limit = true; %if true, uses max_x/y/z gridsizes below on the domain, remember y is vertical (direction of wire growth)
+        L = 0;
+        D = 40;
+        appendstring = strcat(appendstring, '_background');
     end
-    
-    
     for i=1:max(size(NWspacing_x))
         mem_percpu = (total_mem(i)*1024)/tasks; %in Megabytes
         
@@ -349,4 +346,5 @@ for bb=1:2
         end
     end
 end
+cd ..
 disp('Done')
