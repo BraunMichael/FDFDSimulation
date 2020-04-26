@@ -1,4 +1,4 @@
-function NWModelDrawing_rotated(substrateThickness, NWLength, NWDiameter, NWspacing_x, NWspacing_z, Laser_angle, xoffset, axishandle)
+function NWModelDrawing(substrateThickness, NWLength, NWDiameter, NWspacing_x, NWspacing_z, Laser_angle, xoffset, axishandle)
 
 NWRadius = NWDiameter/2;
 [xNW,yNW,zNW] = cylinder(NWRadius, 100);
