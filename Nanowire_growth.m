@@ -5,17 +5,17 @@ inspect_only = false;  % true to inspect structure before any calculation
 
 tasks = 16; %16 %8
 nodes = 2; %2 %1
-total_mem = [16 32]; %[8 16 32 48]; %Total ram, in gigabytes, scaling with spacing, just read at same index
+total_mem = 16; %[8 16 32 48]; %Total ram, in gigabytes, scaling with spacing, just read at same index
 
 
-%endstring = '_100nmtop_4nmbackground';
-%endstring = '_100nmtop_fixedNWsize_5nm_subres4';
-%endstring = '_200nmtop_200nmsub_fixedNWsize_5nm_subres4_2NWs';
-%endstring = '_200nmtop_200nmsub_fixNW_noTip'; %_background added with createBackgroundFile
-endstring = '_200nmtop_200nmsub'; %_background added with createBackgroundFile
+%appendstring = '_100nmtop_4nmbackground';
+%appendstring = '_100nmtop_fixedNWsize_5nm_subres4';
+%appendstring = '_200nmtop_200nmsub_fixedNWsize_5nm_subres4_2NWs';
+%appendstring = '_200nmtop_200nmsub_fixNW_noTip'; %_background added with createBackgroundFile
+appendstring = '_200nmtop_200nmsub'; %_background added with createBackgroundFile
 
 
-timestring = {'2:00:00'; '10:00:00'}; %{'1:00:00'; '2:00:00'; '4:00:00'; '12:00:00'};
+timestring = {'1:00:00'}; %{'1:00:00'; '2:00:00'; '4:00:00'; '12:00:00'};
 createBackgroundFile = false;
 NW_exist = true;
 NW_tip = true; %Simulate with gold NW catalyst?
@@ -39,14 +39,14 @@ max_wire_xz_gridsize = 4; %mostly 2, Utilizes non-uniform grid, minimum grid siz
 max_wire_y_gridsize = 5; %mostly 5, 2 or 10
 max_tip_gridsize = 4; %mostly 2 %Utilizes non-uniform grid, minimum grid size in nm, inf uses grid_size
 
-superCellnum_x = 2; % number of cells in x direction
+superCellnum_x = 1; % number of cells in x direction
 superCellnum_z = 1; % number of cells in z direction
 
-NW_Diameter_Delta = [0 0]; %[0 40;20 0];  %must be array of size superCellnum_x (wide) by superCellnum_z ('tall'), defines deviation from D set below for wire at given position in array
-NW_xpos_Delta = [0 0]; %[0 30;-120 90];  %must be array of size superCellnum_x (wide) by superCellnum_z ('tall'), defines deviation from center of subcell in x direction at given position in array
-NW_zpos_Delta = [0 0]; %[0 60;-50 140]; %must be array of size superCellnum_x (wide) by superCellnum_z ('tall'), defines deviation from center of subcell in z direction at given position in array
-NWspacing_x = [400 800]; %[300 400 600 1000]; %This is delta=0 spacing, regardless of number of wires in supercell
-NWspacing_z = [400 800]; %These can be an array, like how S used to be, but both must match (doesn't do all possible combinations), keeps it square if an array
+NW_Diameter_Delta = 0; %[0 40;20 0];  %must be array of size superCellnum_x (wide) by superCellnum_z ('tall'), defines deviation from D set below for wire at given position in array
+NW_xpos_Delta = 0; %[0 30;-120 90];  %must be array of size superCellnum_x (wide) by superCellnum_z ('tall'), defines deviation from center of subcell in x direction at given position in array
+NW_zpos_Delta = 0; %[0 60;-50 140]; %must be array of size superCellnum_x (wide) by superCellnum_z ('tall'), defines deviation from center of subcell in z direction at given position in array
+NWspacing_x = 400; %[300 400 600 1000]; %This is delta=0 spacing, regardless of number of wires in supercell
+NWspacing_z = 400; %These can be an array, like how S used to be, but both must match (doesn't do all possible combinations), keeps it square if an array
 
 max_NWlength = 2000; %2000
 
@@ -56,16 +56,16 @@ if createBackgroundFile
     overall_gridsize_limit = true; %if true, uses max_x/y/z gridsizes below on the domain, remember y is vertical (direction of wire growth)
     L = 0;
     D = 40;
-    endstring = strcat(endstring, '_background');
+    appendstring = strcat(appendstring, '_background');
 else
     substrate_exist = true;
     overall_gridsize_limit = false;
     %num_lengths = 99;
     %L = [0 linspace(20, 1000, num_lengths)];
     %L = 1000;
-    
-    %     num_lengths = 199;
-    %     L = [0 linspace(20, 2000, num_lengths)];
+    %L = [160 300 760 1480 1620 1760 1940]
+    num_lengths = 199;
+    L = [0 linspace(20, 2000, num_lengths)];
     
     
     %num_lengths = 197;
@@ -74,8 +74,8 @@ else
     %L = [0 linspace(40, 1000, num_lengths)];
     
     
-    num_lengths = 100; %20 nm steps, run again with below values to improve to 10 nm resolution if submitting in 2 batches
-    L = [0 linspace(20, 2000, num_lengths)];
+    %num_lengths = 100; %20 nm steps, run again with below values to improve to 10 nm resolution if submitting in 2 batches
+    %L = [0 linspace(20, 2000, num_lengths)];
     
     %num_lengths = 99; %Complement of above to mesh toghether for 10 nm resolution
     %L = linspace(30, 1990, num_lengths);
@@ -89,8 +89,8 @@ else
     
     %num_diameters = 31;
     %D = linspace(40, 100, num_diameters);
-    D = [40 80];
-    %D = 80;
+    %D = [40 80];
+    D = 40;
 end
 
 %only used if createBackgroundFile is true
@@ -157,6 +157,7 @@ if radial_growth
         return
     end
 end
+startstring = sprintf('GeNW_%s',typestring);
 if ~xor(strcmp(solveropts.method, 'inputfile'),strcmp(solveropts.method, 'direct'))
     disp('You must choose either direct or inputfile as a solveropts.method. Check spelling and that they are strings!')
     return
@@ -196,48 +197,22 @@ end
 folderpath=uigetdir();
 addpath(genpath(folderpath))
 cd(folderpath)
-
-for i=1:max(size(NWspacing_x))
-    mem_percpu = (total_mem(i)*1024)/tasks; %in Megabytes
-    
-    
-    if radial_growth
-        if Dim_3D
-            folderstring = sprintf('3D_%sx_%.0f_z_%.0f_maxL_%.0f_res_%.0f%s%s', typestring, NWspacing_x(i), NWspacing_z(i), max_NWlength, grid_size, superCellString, endstring);
-        else
-            folderstring = sprintf('2D_%sx_%.0f_z_%.0f_maxL_%.0f_res_%.0f%s%s', typestring, NWspacing_x(i), NWspacing_z(i), max_NWlength, grid_size, superCellString, endstring);
-        end
-        fullfolderstring = strcat(pwd,'\',folderstring);
-        if 7~=exist(fullfolderstring,'dir')
-            mkdir(fullfolderstring)
-        end
-        addpath(genpath(fullfolderstring))
-        cd (fullfolderstring)
-        runfilesstring = 'RunFiles';
-        fullrunfilesstring = strcat(pwd,'\',runfilesstring);
-        chmodfilename = strcat(fullrunfilesstring,'\','chmodfile.sh');
-        if 7~=exist(fullrunfilesstring,'dir')
-            mkdir(fullrunfilesstring)
-        end
-        addpath(genpath(fullrunfilesstring))
-        cd(fullrunfilesstring)
-        fid = fopen(chmodfilename,'w');
-        switch cluster
-            case 'Sherlock'
-                fprintf(fid, '#! /bin/bash\ncd /scratch/users/mbraun7/%s/RunFiles\nchmod -R +x *\ngzip -d -r /scratch/users/mbraun7/%s/\n', folderstring, folderstring);
-            case 'Rice'
-                fprintf(fid, '#! /bin/bash\ncd /fasrmshare/users/mbraun7/%s/RunFiles\nchmod -R +x *\ngzip -d -r /scratch/users/mbraun7/%s/\n', folderstring, folderstring);
-        end
-        fclose(fid);true;
+for bb=1:2
+    if bb == 2
+        
     end
-    for j=1:max(size(D))
-        if ~radial_growth
+    
+    
+    for i=1:max(size(NWspacing_x))
+        mem_percpu = (total_mem(i)*1024)/tasks; %in Megabytes
+        
+        
+        if radial_growth
             if Dim_3D
-                folderstring = sprintf('3D_%sd_%.0f_x_%.0f_z_%.0f_maxL_%.0f_res_%.0f%s%s', typestring, D(j), NWspacing_x(i), NWspacing_z(i), max_NWlength, grid_size, superCellString, endstring);
+                folderstring = sprintf('3D_%sx_%.0f_z_%.0f_maxL_%.0f_res_%.0f%s%s', typestring, NWspacing_x(i), NWspacing_z(i), max_NWlength, grid_size, superCellString, appendstring);
             else
-                folderstring = sprintf('2D_%sd_%.0f_x_%.0f_z_%.0f_maxL_%.0f_res_%.0f%s%s', typestring, D(j), NWspacing_x(i), NWspacing_z(i), max_NWlength, grid_size, superCellString, endstring);
+                folderstring = sprintf('2D_%sx_%.0f_z_%.0f_maxL_%.0f_res_%.0f%s%s', typestring, NWspacing_x(i), NWspacing_z(i), max_NWlength, grid_size, superCellString, appendstring);
             end
-            cd(folderpath)
             fullfolderstring = strcat(pwd,'\',folderstring);
             if 7~=exist(fullfolderstring,'dir')
                 mkdir(fullfolderstring)
@@ -246,80 +221,110 @@ for i=1:max(size(NWspacing_x))
             cd (fullfolderstring)
             runfilesstring = 'RunFiles';
             fullrunfilesstring = strcat(pwd,'\',runfilesstring);
+            chmodfilename = strcat(fullrunfilesstring,'\','chmodfile.sh');
             if 7~=exist(fullrunfilesstring,'dir')
                 mkdir(fullrunfilesstring)
             end
             addpath(genpath(fullrunfilesstring))
             cd(fullrunfilesstring)
+            fid = fopen(chmodfilename,'w');
+            switch cluster
+                case 'Sherlock'
+                    fprintf(fid, '#! /bin/bash\ncd /scratch/users/mbraun7/%s/RunFiles\nchmod -R +x *\ngzip -d -r /scratch/users/mbraun7/%s/\n', folderstring, folderstring);
+                case 'Rice'
+                    fprintf(fid, '#! /bin/bash\ncd /fasrmshare/users/mbraun7/%s/RunFiles\nchmod -R +x *\ngzip -d -r /scratch/users/mbraun7/%s/\n', folderstring, folderstring);
+            end
+            fclose(fid);true;
         end
-        for m=1:max(size(Laser_angle))
-            for n=1:max(size(Laser_pol))
-                for p=1:max(size(substrate_thickness))
+        for j=1:max(size(D))
+            if ~radial_growth
+                midstring = sprintf('d_%0.0f_x_%0.0f_z_%0.0f_', D(j), NWspacing_x(i), NWspacing_z(i));
+                if Dim_3D
+                    folderstring = sprintf('3D_%s%smaxL_%.0f_res_%.0f%s%s', startstring, midstring, max_NWlength, grid_size, superCellString, appendstring);
+                else
+                    folderstring = sprintf('2D_%s%smaxL_%.0f_res_%.0f%s%s', startstring, midstring, max_NWlength, grid_size, superCellString, appendstring);
+                end
+                cd(folderpath)
+                fullfolderstring = strcat(pwd,'\',folderstring);
+                if 7~=exist(fullfolderstring,'dir')
+                    mkdir(fullfolderstring)
+                end
+                addpath(genpath(fullfolderstring))
+                cd (fullfolderstring)
+                runfilesstring = 'RunFiles';
+                fullrunfilesstring = strcat(pwd,'\',runfilesstring);
+                if 7~=exist(fullrunfilesstring,'dir')
+                    mkdir(fullrunfilesstring)
+                end
+                addpath(genpath(fullrunfilesstring))
+                
+                cd(fullrunfilesstring)
+                pythonFolderNameOnly = 'PythonFiles';
+                pythonFolderString = strcat(pwd,'\',pythonFolderNameOnly);
+                if 7~=exist(pythonFolderString,'dir')
+                    mkdir(pythonFolderString)
+                end
+                addpath(genpath(pythonFolderString))
+                
+            end
+            for m=1:max(size(Laser_angle))
+                for n=1:max(size(Laser_pol))
+                    endstring = sprintf('%sres_%0.0f_inc_%0.0fdeg_pol_%0.0fdeg%s%s', midstring, grid_size, Laser_angle(m), Laser_pol(n), superCellString, appendstring);
                     if radial_growth
-                        masterfilename = sprintf('masterfile_GeNW_%sx_%0.0f_z_%0.0f_res_%0.0f_inc_%0.0fdeg_pol_%0.0fdeg%s%s.sh', typestring, NWspacing_x(i), NWspacing_z(i), grid_size, Laser_angle(m), Laser_pol(n), superCellString, endstring);
+                        masterfilename = sprintf('masterfile_%sx_%0.0f_z_%0.0f_res_%0.0f_inc_%0.0fdeg_pol_%0.0fdeg%s%s.sh', startstring, NWspacing_x(i), NWspacing_z(i), grid_size, Laser_angle(m), Laser_pol(n), superCellString, appendstring);
                     else
-                        masterfilename = sprintf('masterfile_GeNW_%sd_%0.0f_x_%0.0f_z_%0.0f_res_%0.0f_inc_%0.0fdeg_pol_%0.0fdeg%s%s.sh', typestring, D(j), NWspacing_x(i), NWspacing_z(i), grid_size, Laser_angle(m), Laser_pol(n), superCellString, endstring);
+                        masterfilename = sprintf('masterfile_%s%s.sh', startstring, endstring);
                     end
                     fid = fopen(masterfilename,'w');
                     switch cluster
                         case 'Sherlock'
-                            fprintf(fid, '#! /bin/bash\ncd /scratch/users/mbraun7/%s/RunFiles\nchmod +x *\ngzip -d -r /scratch/users/mbraun7/%s/\n', folderstring, folderstring);
+                            fprintf(fid, '#! /bin/bash\ncd /scratch/users/mbraun7/%s/RunFiles\nchmod -R +x *\ngzip -d -r /scratch/users/mbraun7/%s/\n', folderstring, folderstring);
                         case 'Rice'
-                            fprintf(fid, '#! /bin/bash\ncd /farmshare/user_data/mbraun7/%s/RunFiles\nchmod +x *\ngzip -d -r /farmshare/user_data/mbraun7/%s/\n', folderstring, folderstring);
+                            fprintf(fid, '#! /bin/bash\ncd /farmshare/user_data/mbraun7/%s/RunFiles\nchmod -R +x *\ngzip -d -r /farmshare/user_data/mbraun7/%s/\n', folderstring, folderstring);
                     end
                     fclose(fid);true;
                     
-                    pythonfilename = 'pythonrestart.py';
-                    fid = fopen(pythonfilename,'w');
-                    pythonFile_1 = sprintf('from subprocess import run\nimport sys\n\ndef main():\n\targs = sys.argv[1:]\n\tfor fileNumberString in args:');
-                    pythonFile_2 = sprintf('\n\t\tif not fileNumberString.isdigit():\n\t\t\traise ValueError(''Entered value must be an int and not be the empty string'')\n\t\t\treturn\n\t\tfileNumber = int(fileNumberString)');
-                    pythonFile_3 = sprintf('\n\t\tfileNameStart = ''GeNW_%sL_''\n\t\tfileNameEnd = ''_d_%0.0f_x_%0.0f_z_%0.0f_res_%0.0f%s%s.sh''\n\t\tfileName = fileNameStart + str(fileNumber) + fileNameEnd',typestring, D(j), NWspacing_x(i), NWspacing_z(i), grid_size, superCellString, endstring);
-                    pythonFile_4 = sprintf('\n\t\trun("sbatch " + fileName, shell = True)\n\t\trun("sleep 1s", shell = True)\n\nif __name__ == ''__main__'':\n\tmain()');
-                    pythonFile = strcat(pythonFile_1,pythonFile_2,pythonFile_3,pythonFile_4);
-                    fprintf(fid, '%s', pythonFile);
-                    fclose(fid);true;
+                    pythonRestartFile(startstring, midstring, grid_size, superCellString, endstring);
+                    
+                    
+                    
                     
                     for q=1:max(size(src_top_dist))
                         cd (fullfolderstring)
                         parfor k=1:max(size(L))
-                            runningfilenamebase = sprintf('GeNW_%sL_%0.0f_d_%0.0f_x_%0.0f_z_%0.0f_subt_%0.0f_res_%0.0f_inc_%0.0fdeg_pol_%0.0fdeg%s%s', typestring, L(k), D(j), NWspacing_x(i), NWspacing_z(i), substrate_thickness(p), grid_size, Laser_angle(m), Laser_pol(n), superCellString, endstring);
-                            [E, H, obj_array, src_array] = nanowire_3d_func_V2(substrate_thickness(p), L(k), D(j), NWspacing_x(i), NWspacing_z(i), Laser_angle(m), Laser_pol(n), max_NWlength, roughness_rate, grid_size, max_wire_xz_gridsize, max_wire_y_gridsize, max_tip_gridsize, PML_cells, z_location, opts, min_tip_src_dist, src_top_dist(q), Dim_3D, solveropts, wire_shape, UniformNWCells, TFSF, inspect_only, show_solution, save_solution, runningfilenamebase, NW_tip, top_source_testing, substrate_exist, max_x_gridsize, max_y_gridsize, max_z_gridsize, overall_gridsize_limit, superCellnum_x, superCellnum_z, NW_Diameter_Delta, NW_xpos_Delta, NW_zpos_Delta, NW_exist);
+                            runningfilenamebase = sprintf('%sL_%0.0f_%s', startstring, L(k), endstring);
+                            [E, H, obj_array, src_array] = nanowire_3d_func_V2(substrate_thickness, L(k), D(j), NWspacing_x(i), NWspacing_z(i), Laser_angle(m), Laser_pol(n), max_NWlength, roughness_rate, grid_size, max_wire_xz_gridsize, max_wire_y_gridsize, max_tip_gridsize, PML_cells, z_location, opts, min_tip_src_dist, src_top_dist(q), Dim_3D, solveropts, wire_shape, UniformNWCells, TFSF, inspect_only, show_solution, save_solution, runningfilenamebase, NW_tip, top_source_testing, substrate_exist, max_x_gridsize, max_y_gridsize, max_z_gridsize, overall_gridsize_limit, superCellnum_x, superCellnum_z, NW_Diameter_Delta, NW_xpos_Delta, NW_zpos_Delta, NW_exist);
                             appendInfoMatFile(runningfilenamebase, superCellnum_x, superCellnum_z, NW_Diameter_Delta, NW_xpos_Delta, NW_zpos_Delta)
-                            %drawnow
+                            %                         drawnow
                         end
                         cd(fullrunfilesstring)
                         for k=1:max(size(L))
-                            filenamebase = sprintf('GeNW_%sL_%.0f_d_%0.0f_x_%0.0f_z_%0.0f_res_%0.0f%s%s.sh', typestring, L(k), D(j), NWspacing_x(i), NWspacing_z(i), grid_size, superCellString, endstring);
-                            jobname = sprintf('3D_%sL_%.0f_d_%0.0f_x_%0.0f_z_%0.0f_res_%0.0f%s%s', typestring, L(k), D(j), NWspacing_x(i), NWspacing_z(i), grid_size, superCellString, endstring);
-                            runningfilenamebase = sprintf('GeNW_%sL_%0.0f_d_%0.0f_x_%0.0f_z_%0.0f_subt_%0.0f_res_%0.0f_inc_%0.0fdeg_pol_%0.0fdeg%s%s', typestring, L(k), D(j), NWspacing_x(i), NWspacing_z(i), substrate_thickness(p), grid_size, Laser_angle(m), Laser_pol(n), superCellString, endstring);
+                            filenamebase = sprintf('%sL_%.0f_%sres_%0.0f%s%s', startstring, L(k), midstring, grid_size, superCellString, appendstring);
+                            jobname = strcat('3D_',filenamebase);
+                            runningfilenamebase = sprintf('%sL_%0.0f_%s', startstring, L(k), endstring);
                             
-                            
-                            autopythonfilename = sprintf('autorestart_GeNW_%sL_%.0f_d_%0.0f_x_%0.0f_z_%0.0f_res_%0.0f%s%s.py', typestring, L(k), D(j), NWspacing_x(i), NWspacing_z(i), grid_size, superCellString, endstring);
-                            fid = fopen(autopythonfilename,'w');
-                            autopythonFile_1 = sprintf('from subprocess import run\nimport sys\n\ndef main():\n\targs = sys.argv[1:]\n\tlogFileName = args[0]');
-                            autopythonFile_2 = sprintf('\n\twith open(logFileName, ''r'') as f:\n\t\tlogFile = f.read().strip()\n\t\tif logFile.find(''fd3d finished'') == -1:');
-                            autopythonFile_3 = sprintf('\n\t\t\tfileName = ''GeNW_%sL_%.0f_d_%0.0f_x_%0.0f_z_%0.0f_res_%0.0f%s%s.sh''\n\t\t\trun("sbatch " + fileName, shell = True)',typestring, L(k), D(j), NWspacing_x(i), NWspacing_z(i), grid_size, superCellString, endstring);
-                            autopythonFile_4 = sprintf('\n\nif __name__ == ''__main__'':\n\tmain()');
-                            autopythonFile = strcat(autopythonFile_1, autopythonFile_2, autopythonFile_3, autopythonFile_4);
-                            fprintf(fid, '%s', autopythonFile);
-                            fclose(fid);true;
+                            pythonWatcherFileName = strcat('watcher_',filenamebase,'.py');
+                            pythonPreWatcherFileName = strcat('pre',pythonWatcherFileName);
+                            autopythonfilename = strcat('autorestart_',filenamebase,'.py');
+                            pythonAutoRestartFile(filenamebase, autopythonfilename, pythonWatcherFileName, pythonPreWatcherFileName, pythonFolderString, pythonFolderNameOnly, folderstring, runfilesstring, cluster, timestring{i});
                             
                             fprintf('Working on %s\n', filenamebase)
                             switch cluster
                                 case 'Sherlock'
-                                    preamble = sprintf('#! /bin/bash\n#\n#SBATCH --job-name=%s\n#\n#SBATCH --time=%s\n#SBATCH --ntasks=%.0f\n#SBATCH --nodes=%.0f\n#SBATCH --mem-per-cpu=%.0fM\n#SBATCH --mail-type=ALL\n#SBATCH --output=log%%x_%%j \ncd /scratch/users/mbraun7/%s\necho "SLURM_JOB_ID = $SLURM_JOB_ID"\n', jobname, timestring{i}, tasks, nodes, mem_percpu, folderstring);
+                                    %Has a 30 second delay to ensure compatibility with watcher python script
+                                    preamble = sprintf('#! /bin/bash\n#\n#SBATCH --job-name=%s\n#\n#SBATCH --begin=now+30\n#SBATCH --time=%s\n#SBATCH --ntasks=%.0f\n#SBATCH --nodes=%.0f\n#SBATCH --mem-per-cpu=%.0fM\n#SBATCH --mail-type=ALL\n#SBATCH --output=log%%x_%%j \ncd /scratch/users/mbraun7/%s\necho "SLURM_JOB_ID = $SLURM_JOB_ID"\ncp %s/%s/%s %s/%s/%s_q.py\npython3 %s/%s/%s $SLURM_JOB_ID\n', jobname, timestring{i}, tasks, nodes, mem_percpu, folderstring, runfilesstring, pythonFolderNameOnly, pythonWatcherFileName, runfilesstring, pythonFolderNameOnly, strcat('watcher_',filenamebase), runfilesstring, pythonFolderNameOnly, pythonPreWatcherFileName);
                                     runningfilename = sprintf('srun fd3d -i %s\n', runningfilenamebase);
                                     
-                                case 'Rice'
+                                case 'Rice' %Need to update
                                     preamble = sprintf('#! /bin/bash\n#\n#SBATCH --job-name=%s\n#\n#SBATCH --time=%s\n#SBATCH --cpus-per-task=%.0f\n#SBATCH --ntasks=1\n#SBATCH --nodes=1\n#SBATCH --mem-per-cpu=%.0fM\n#SBATCH --mail-type=ALL\n#SBATCH --output=log%%x_%%j \ncd /farmshare/user_data/mbraun7/%s\nmodule load openmpi/3.0.0\necho "SLURM_JOB_ID = $SLURM_JOB_ID"\n', jobname, timestring{i}, tasks, mem_percpu, folderstring);
                                     runningfilename = sprintf('srun --mpi=pmi2 --cpus-per-task=%.0f fd3d -i %s\n', tasks, runningfilenamebase);
                                     
                             end
-                            fid=fopen(filenamebase,'w'); %Make it 'wt' if you want to see the line breaks in Windows, but messes with Linux
+                            fid=fopen(strcat(filenamebase,'.sh'),'w'); %Make it 'wt' if you want to see the line breaks in Windows, but messes with Linux
                             
                             switch cluster
                                 case 'Sherlock'
-                                    autopython = sprintf('cd /scratch/users/mbraun7/%s/%s\ncp log%s_$SLURM_JOB_ID temp_$SLURM_JOB_ID\npython3 %s temp_$SLURM_JOB_ID\nrm temp_$SLURM_JOB_ID\n', folderstring, runfilesstring, jobname, autopythonfilename);
+                                    autopython = sprintf('cd /scratch/users/mbraun7/%s/%s\ncp log%s_$SLURM_JOB_ID temp_$SLURM_JOB_ID\npython3 %s/%s temp_$SLURM_JOB_ID\nrm temp_$SLURM_JOB_ID\n', folderstring, runfilesstring, jobname, pythonFolderNameOnly, autopythonfilename);
                                 case 'Rice'
                                     autopython = sprintf('cd /farmshare/user_data/mbraun7/%s/%s\ncp log%s_$SLURM_JOB_ID temp_$SLURM_JOB_ID\npython3 %s temp_$SLURM_JOB_ID\nrm temp_$SLURM_JOB_ID\n', folderstring, runfilesstring, jobname, autopythonfilename);
                             end
@@ -327,20 +332,21 @@ for i=1:max(size(NWspacing_x))
                             fclose(fid);true;
                             
                             fid = fopen(masterfilename,'a+');
-                            fprintf(fid, ['sbatch ' filenamebase '\nsleep 1s\n']);
+                            fprintf(fid, ['sbatch ' strcat(filenamebase,'.sh') '\nsleep 1s\n']);
                             fclose(fid);true;
-
+                            
                         end
                     end
+                    
                 end
             end
+            if ~radial_growth
+                cd ..
+            end
         end
-        if ~radial_growth
+        if radial_growth
             cd ..
         end
-    end
-    if radial_growth
-        cd ..
     end
 end
 disp('Done')
