@@ -274,9 +274,11 @@ for k = 1 : length(theFiles)
     %view(ax1, [1 1 1])
     ax1.CameraUpVector = [0 1 0];
     light(ax1,'Position',[-1 1 3],'Style','infinite')
+    %light(ax1,'Position',[-1 1 1.5],'Style','infinite')
     lighting gouraud
     ax1.XAxis.Visible = 'off';
     ax1.ZAxis.Visible = 'off';
+    %ax1.YAxis.Visible = 'off';
     ylabel(ax1, '$$L$$ (nm)','interpreter','latex','HandleVisibility','off')
     set(gca,'NextPlot','replacechildren')
     ax2=subplot(1,2,2);
