@@ -249,7 +249,7 @@ for k = 1 : length(theFiles)
     xoffset = domainwidth;
     
     for m=0:(numberrepeats-1)
-        NWModelDrawing_rotated(substrateThickness, NWlength, NWDiameter, NWspacing_x, NWspacing_z, Laser_angle, m*xoffset, ax1)
+        NWModelDrawing(substrateThickness, NWlength, NWDiameter, NWspacing_x, NWspacing_z, Laser_angle, m*xoffset, ax1)
     end
     
     fighand = pcolor(ax1, outu2, outv2, real(field_comp));
